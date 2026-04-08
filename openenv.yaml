@@ -1,0 +1,195 @@
+name: email-triage-env
+version: "2.0"
+author: OpenEnv Community
+license: MIT
+
+description: >
+  Real-world customer support email triage environment for training and evaluating AI agents.
+  Agents learn to classify emails, prioritize responses, and handle customer interactions
+  with realistic constraints including SLA penalties for premium customers.
+
+task: email-triage
+
+metadata:
+  domain: customer-support
+  task_type: multi-step-decision-making
+  data_source: [kaggle, synthetic]
+  realistic: true
+
+environment_spec:
+  api_version: "1.0"
+  observation_space:
+    type: object
+    properties:
+      queue:
+        type: array
+        description: "Remaining emails in processing queue"
+        items:
+          type: object
+          properties:
+            id: { type: string }
+            subject: { type: string }
+            body: { type: string }
+            customer_id: { type: string }
+            customer_tier: { type: string, enum: [free, premium, enterprise] }
+            true_label: { type: string }
+            true_priority: { type: string }
+            true_response: { type: string }
+      current_email:
+        type: object
+        nullable: true
+        description: "Email currently being processed"
+      history:
+        type: object
+        description: "Action history per customer"
+      step_count:
+        type: integer
+        description: "Total steps taken"
+  
+  action_space:
+    type: object
+    properties:
+      action_type:
+        type: string
+        enum: [classify, prioritize, respond, close]
+        description: "Type of action to perform"
+      email_id:
+        type: string
+        description: "Target email ID"
+      label:
+        type: string
+        nullable: true
+        enum: [billing, technical, feature, general]
+        description: "Category for classify action"
+      priority:
+        type: string
+        nullable: true
+        enum: [low, medium, high]
+        description: "Priority for prioritize action"
+      response:
+        type: string
+        nullable: true
+        description: "Response text for respond action"
+  
+  reward:
+    type: object
+    properties:
+      score:
+        type: number
+        minimum: -1.0
+        maximum: 1.0
+        description: "Reward for this action"
+      feedback:
+        type: string
+        description: "Human-readable feedback"
+
+tasks:
+  easy:
+    name: "Email Classification"
+    difficulty: 1
+    description: |
+      Correctly classify emails into categories: billing, technical, feature, or general.
+      Focus on understanding email content and correct categorization.
+    num_emails: 20
+    expected_score: 0.75
+    success_criteria:
+      - "Classification accuracy > 70%"
+      - "Clear category understanding"
+    reward_range: [0.0, 1.0]
+  
+  medium:
+    name: "Priority-Based Triage"
+    difficulty: 2
+    description: |
+      Multi-task workflow: classify emails AND assign correct priority (low/medium/high)
+      based on content analysis and customer tier. Send appropriate responses.
+    num_emails: 40
+    expected_score: 0.60
+    success_criteria:
+      - "Combined classification + priority accuracy > 60%"
+      - "Consistent response generation"
+      - "Efficient workflow"
+    reward_range: [0.0, 1.0]
+  
+  hard:
+    name: "Full Support Workflow"
+    difficulty: 3
+    description: |
+      Complete workflow with SLA penalties: classify, prioritize, respond appropriately,
+      and ensure premium customers receive high-priority treatment.
+      Complex scenarios require multi-step reasoning.
+    num_emails: 60
+    expected_score: 0.50
+    success_criteria:
+      - "Overall score > 50%"
+      - "SLA compliance for premium customers"
+      - "Balanced accuracy across all task dimensions"
+    reward_range: [0.0, 1.0]
+
+reward_function:
+  description: |
+    Multi-component reward function providing signal over entire trajectory.
+    Rewards partial progress and penalizes clearly undesirable behavior.
+  
+  components:
+    classify_correct: 0.2
+    prioritize_correct: 0.2
+    respond: 0.4
+    close: 0.2
+    step_penalty: -0.05
+    sla_violation: -0.1
+  
+  notes: |
+    - Partial progress: each correct step earns reward
+    - SLA penalties: premium customers missing high priority = -0.1
+    - Efficiency penalty: -0.05 per step to encourage quick resolution
+    - Non-sparse: dense reward signal throughout episode
+
+features:
+  - multi-email-queue
+  - customer-memory
+  - sla-penalties
+  - semantic-grading
+  - real-world-data
+  - progressive-difficulty
+
+constraints:
+  max_steps: 100
+  time_limit_per_episode: null
+  episode_reset_required: true
+
+dataset:
+  primary: kaggle
+  kaggle_dataset: "wcukierski/enron-email-dataset"
+  fallback: synthetic
+  size: "variable (20-60 emails per task)"
+  preprocessing:
+    - label_augmentation
+    - customer_tier_assignment
+    - response_template_generation
+
+baseline:
+  model: "gpt-4o-mini"
+  easy_score: 0.75
+  medium_score: 0.60
+  hard_score: 0.50
+  average_score: 0.62
+  script: "baseline_inference.py"
+
+deployment:
+  platform: "hugging-face"
+  type: "docker"
+  port: 8000
+  health_check: "/health"
+
+documentation:
+  setup: "README.md"
+  development: "DEVELOPMENT.md"
+  api_reference: "API_REFERENCE.md"
+  changelog: "CHANGELOG.md"
+
+compliance:
+  openenv_spec: "1.0"
+  validates: true
+  reproducible: true
+  deterministic_graders: true

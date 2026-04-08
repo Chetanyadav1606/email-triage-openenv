@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-04-08T18:49:07.070486",
+  "model": "gpt-4o-mini",
+  "temperature": 0.0,
+  "tasks": [
+    {
+      "difficulty": "easy",
+      "task": "Email Classification",
+      "model": "gpt-4o-mini",
+      "temperature": 0.0,
+      "total_steps": 100,
+      "emails_processed": 0,
+      "total_reward": 0.0,
+      "final_score": 0.0,
+      "expected_score": 0.75,
+      "score_vs_expected": 0.0,
+      "feedback": "Poor. Review category definitions and email content more carefully.",
+      "actions": []
+    },
+    {
+      "difficulty": "medium",
+      "task": "Priority-Based Triage",
+      "model": "gpt-4o-mini",
+      "temperature": 0.0,
+      "total_steps": 100,
+      "emails_processed": 0,
+      "total_reward": 0.0,
+      "final_score": 0.0,
+      "expected_score": 0.6,
+      "score_vs_expected": 0.0,
+      "feedback": "Needs improvement. Ensure you're completing all task steps.",
+      "actions": []
+    },
+    {
+      "difficulty": "hard",
+      "task": "Full Support Workflow",
+      "model": "gpt-4o-mini",
+      "temperature": 0.0,
+      "total_steps": 100,
+      "emails_processed": 0,
+      "total_reward": 0.0,
+      "final_score": 0.0,
+      "expected_score": 0.5,
+      "score_vs_expected": 0.0,
+      "feedback": "Poor. Critical SLA violations. Prioritize premium customers properly.",
+      "actions": []
+    }
+  ],
+  "summary": {
+    "total_tasks": 3,
+    "average_score": 0.0,
+    "all_difficulties": [
+      "easy",
+      "medium",
+      "hard"
+    ]
+  }
+}
